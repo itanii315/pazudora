@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import QUIT, MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP
 import sys
 import random
+import glob
 
 SCREEN_SIZE = (480, 840)
 N_DROP_X = 6
@@ -13,93 +14,147 @@ OFFSET_Y = SCREEN_SIZE[1] - DROP_LENGTH * N_DROP_Y
 MODE_NORMAL = 0
 MODE_ERASE = 1
 
+pygame.mixer.init(44100, -16, 2, 512)
 pygame.init()
+pygame.mixer.set_num_channels(16)
+
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("パズドラゲーム")
+
+pygame.mixer.music.load("bgm_02.ogg")
+pygame.mixer.music.play(-1)
+SOUNDS = {filename: pygame.mixer.Sound(filename) for filename in glob.glob("se_*.ogg")}
+IMAGES = {filename: pygame.transform.smoothscale(pygame.image.load(filename).convert_alpha(), (DROP_LENGTH, DROP_LENGTH)) for filename in glob.glob("*.png")}
 
 class Pazudora:
     def __init__(self):
         self.drops = [[random.randint(1, 6) for i in range(N_DROP_X)] for j in range(N_DROP_Y) ]
 
-    def main(self):
-        is_moving = False
-        moving_drop_index = (0, 0)
-        moving_drop_pos = (0, 0)
-        moving_drop_type = 0
-        clock = pygame.time.Clock()
+        self.is_moving = False
+        self.moving_drop_index = (0, 0)
+        self.moving_drop_pos = (0, 0)
+        self.moving_drop_type = 0
 
-        erase_drops = []
-        erase_motion_count = 0
-        erase_mode = MODE_NORMAL
+        self.erase_drops = []
+        self.erase_motion_count = 0
+        self.erase_mode = MODE_NORMAL
+        self.erase_combo = 0
+
+    def main(self):
+        clock = pygame.time.Clock()
         while True:
             clock.tick(FPS)
 
             for event in pygame.event.get(): # 終了処理
                 if event.type == QUIT:
                     sys.exit()
-                if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                    if erase_mode != MODE_NORMAL:
-                        continue
-                    x, y = self.to_index(event.pos)
-                    if 0 <= x < N_DROP_X and 0 <= y < N_DROP_Y:
-                        is_moving = True
-                        moving_drop_pos = event.pos
-                        moving_drop_index = (x, y)
-                        moving_drop_type = self.drops[y][x]
-                        self.drops[y][x] = 0
-                if event.type == MOUSEMOTION:
-                    if is_moving:
-                        moving_drop_pos = event.pos
-                        if moving_drop_pos[1] < OFFSET_Y:
-                            moving_drop_pos = moving_drop_pos[0], OFFSET_Y
-                        new_index = self.to_index(moving_drop_pos)
-                        if not (0 <= new_index[0] < N_DROP_X and 0 <= new_index[1] < N_DROP_Y):
-                            continue
-                        if new_index != moving_drop_index:
-                            self.drops[moving_drop_index[1]][moving_drop_index[0]] = self.drops[new_index[1]][new_index[0]]
-                            self.drops[new_index[1]][new_index[0]] = 0
-                            moving_drop_index = new_index
-                if event.type == MOUSEBUTTONUP and event.button == 1:
-                    if is_moving:
-                        is_moving = False
-                        self.drops[moving_drop_index[1]][moving_drop_index[0]] = moving_drop_type
-                        # erase
-                        erase_drops = self.erase_drop()
-                        erase_motion_count = 0
-                        erase_mode = MODE_ERASE
+                self.check_event(event)
 
-            if erase_mode != MODE_NORMAL:
-                if erase_motion_count == 0:
-                    if erase_drops:
-                        chain = erase_drops.pop(0)
-                        for x, y in chain:
-                            self.drops[y][x] = 0
-                        # interval
-                        erase_motion_count = FPS // 2
-                    else:
-                        has_erased = self.is_in_zero()
-                        self.fall()
-                        self.fall_new_drop()
-                        if has_erased:
-                            erase_drops = self.erase_drop()
-                            erase_motion_count = FPS // 2
-                        else:
-                            erase_mode = MODE_NORMAL
-                if erase_motion_count > 0:
-                    erase_motion_count -= 1
+            self.erase_motion()
 
-            screen.fill((0,0,0))
-            for y in range(N_DROP_Y):
-                for x in range(N_DROP_X):
-                    pos = self.to_pos(x, y)
-                    self.draw_drop(pos, self.drops[y][x])
+            self.draw()
 
-            if is_moving:
-                self.draw_drop(moving_drop_pos, moving_drop_type)
+    def draw(self):
+        screen.fill((0,0,0))
+        for y in range(N_DROP_Y):
+            for x in range(N_DROP_X):
+                pos = self.to_pos(x, y)
+                self.draw_drop(pos, self.drops[y][x])
+        if self.is_moving:
+            self.draw_drop(self.moving_drop_pos, self.moving_drop_type)
+        pygame.display.update() # 画面更新
 
-            pygame.display.update() # 画面更新
+    def erase_motion(self):
+        if self.erase_mode == MODE_NORMAL:
+            return
+
+        self.erase_motion_count -= 1
+        if self.erase_motion_count > 0:
+            return
+
+        if self.erase_combo == 0:
+            self.erase_drops = self.erase_drop()
+
+        if self.erase_drops:
+            # 消す
+            self.erase_combo += 1
+            sound = min(self.erase_combo, 12)
+            SOUNDS["se_006p%03d.ogg" % sound].play()
+            chain = self.erase_drops.pop(0)
+            for x, y in chain:
+                self.drops[y][x] = 0
+            self.erase_motion_count = int(FPS * 0.4)
+        else:
+            if self.is_in_zero():
+                # 落下
+                self.fall()
+                self.fall_new_drop()
+                self.erase_drops = self.erase_drop()
+                if self.erase_drops:
+                    self.erase_motion_count = int(FPS * 0.4)
+                else:
+                    self.finish_erase()
+            else:
+                self.finish_erase()
+
+    def finish_erase(self):
+        self.erase_combo = 0
+        self.erase_motion_count = 0
+        self.erase_mode = MODE_NORMAL
+
+    def check_event(self, event):
+        if event.type == MOUSEBUTTONDOWN and event.button == 1:
+            self.mouse_down_action(event)
+        if event.type == MOUSEMOTION:
+            self.mouse_move_action(event)
+        if event.type == MOUSEBUTTONUP and event.button == 1:
+            self.mouse_up_action(event)
+
+    def mouse_down_action(self, event):
+        if self.erase_mode == MODE_NORMAL:
+            x, y = self.to_index(event.pos)
+            if 0 <= x < N_DROP_X and 0 <= y < N_DROP_Y:
+                self.is_moving = True
+                self.moving_drop_pos = event.pos
+                self.moving_drop_index = (x, y)
+                self.moving_drop_type = self.drops[y][x]
+                self.drops[y][x] = 0
+
+    def mouse_move_action(self, event):
+        if self.is_moving:
+            self.moving_drop_pos = event.pos[0], max(event.pos[1], OFFSET_Y)
+            new_index = self.to_index(self.moving_drop_pos)
+            if 0 <= new_index[0] < N_DROP_X and 0 <= new_index[1] < N_DROP_Y:
+                if new_index != self.moving_drop_index:
+                    SOUNDS["se_004.ogg"].play()
+                    self.drops[self.moving_drop_index[1]][self.moving_drop_index[0]] = self.drops[new_index[1]][new_index[0]]
+                    self.drops[new_index[1]][new_index[0]] = 0
+                    self.moving_drop_index = new_index
+
+    def mouse_up_action(self, event):
+        if self.is_moving:
+            self.is_moving = False
+            self.drops[self.moving_drop_index[1]][self.moving_drop_index[0]] = self.moving_drop_type
+            # erase
+            self.erase_mode = MODE_ERASE
 
     def draw_drop(self, pos, n):
+        left_up = pos[0] - DROP_LENGTH // 2, pos[1] - DROP_LENGTH // 2
+        if n == 1:
+            screen.blit(IMAGES["red.png"], left_up)
+        if n == 2:
+            screen.blit(IMAGES["blue.png"], left_up)
+        if n == 3:
+            screen.blit(IMAGES["green.png"], left_up)
+        if n == 4:
+            screen.blit(IMAGES["purple.png"], left_up)
+        if n == 5:
+            screen.blit(IMAGES["yellow.png"], left_up)
+        if n == 6:
+            screen.blit(IMAGES["pink.png"], left_up)
+
+        return
+
         if 1 <= n <= 5:
             pygame.draw.circle(screen, self.to_color(n), pos, DROP_LENGTH // 2)
             pygame.draw.circle(screen, (255,255,255), pos, DROP_LENGTH // 2, 2)
