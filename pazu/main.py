@@ -153,22 +153,6 @@ class Pazudora:
         if n == 6:
             screen.blit(IMAGES["pink.png"], left_up)
 
-        return
-
-        if 1 <= n <= 5:
-            pygame.draw.circle(screen, self.to_color(n), pos, DROP_LENGTH // 2)
-            pygame.draw.circle(screen, (255,255,255), pos, DROP_LENGTH // 2, 2)
-        if n == 6:
-            rect_length = int(DROP_LENGTH * 0.9)
-            rect = pygame.locals.Rect(
-                pos[0] - rect_length // 2,
-                pos[1] - rect_length // 2,
-                rect_length,
-                rect_length,
-            )
-            pygame.draw.rect(screen, self.to_color(n), rect)
-            pygame.draw.rect(screen, (255,255,255), rect, 2)
-
     def to_index(self, pos):
         x_index = pos[0] // DROP_LENGTH
         y_index =  (pos[1] - OFFSET_Y) // DROP_LENGTH
@@ -178,20 +162,6 @@ class Pazudora:
         pos_x = DROP_LENGTH * x + DROP_LENGTH // 2
         pos_y = DROP_LENGTH * y + DROP_LENGTH // 2 + OFFSET_Y
         return pos_x, pos_y
-
-    def to_color(self, n):
-        if n == 1:
-            return (255, 96, 32)
-        if n == 2:
-            return (0, 192, 255)
-        if n == 3:
-            return (0, 192, 64)
-        if n == 4:
-            return (255, 255, 128)
-        if n == 5:
-            return (96, 0, 192)
-        if n == 6:
-            return (255, 160, 255)
 
     def is_in_zero(self):
         for y in range(N_DROP_Y):
