@@ -164,10 +164,9 @@ class Pazudora:
         return pos_x, pos_y
 
     def is_in_zero(self):
-        for y in range(N_DROP_Y):
-            for x in range(N_DROP_X):
-                if self.drops[y][x] == 0:
-                    return True
+        for row in self.drops:
+            if 0 in row:
+                return True
         return False
     
     def fall_new_drop(self):
