@@ -8,8 +8,8 @@ import glob
 sys.setrecursionlimit(5000)
 
 SCREEN_SIZE = (400, 600)
-N_DROP_X = 6 * 10
-N_DROP_Y = 5 * 10
+N_DROP_X = 6
+N_DROP_Y = 5
 FPS = 60
 COMBO_INTERVAL = int(FPS * 0.4)
 DROP_LENGTH = SCREEN_SIZE[0] // N_DROP_X
