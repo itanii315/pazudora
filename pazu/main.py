@@ -146,18 +146,9 @@ class Pazudora:
                 self.drops_to_can_all_clear()
             if event.key == K_c:
                 self.drops_to_exist_5colors()
-            if event.key == K_1:
-                self.drops_to_hanabi(1)
-            if event.key == K_2:
-                self.drops_to_hanabi(2)
-            if event.key == K_3:
-                self.drops_to_hanabi(3)
-            if event.key == K_4:
-                self.drops_to_hanabi(4)
-            if event.key == K_5:
-                self.drops_to_hanabi(5)
-            if event.key == K_6:
-                self.drops_to_hanabi(6)
+            hanabi_dict = {K_1: 1, K_2: 2, K_3: 3, K_4: 4, K_5: 5, K_6: 6}
+            if event.key in hanabi_dict:
+                self.drops_to_hanabi(hanabi_dict[event.key])
 
     def drops_to_exist_5colors(self):
         n_prepare_drops = 3 * 5
