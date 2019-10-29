@@ -32,7 +32,7 @@ class SkillsManager:
             for x in range(self.N_DROP_X):
                 self.drops[y][x] = choices.pop(0)
 
-    def drops_to_hanabi(self, n):
+    def drops_to_hanabi(self, drop_num):
         for y in range(self.N_DROP_Y):
             for x in range(self.N_DROP_X):
-                self.drops[y][x] = n
+                self.drops[y][x] = drop_num

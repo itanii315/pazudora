@@ -100,35 +100,36 @@ class Pazudora:
     def _event_handler(self, event):
         if event.type == MOUSEBUTTONDOWN and event.button == 1:
             self._mouse_down_action(event)
-        if event.type == MOUSEMOTION:
+        elif event.type == MOUSEMOTION:
             self._mouse_move_action(event)
-        if event.type == MOUSEBUTTONUP and event.button == 1:
+        elif event.type == MOUSEBUTTONUP and event.button == 1:
             self._mouse_up_action(event)
-        if event.type == KEYDOWN:
+        elif event.type == KEYDOWN:
             if self.is_moving or self.drops_manager.is_erasing:
                 return
-            if event.key == K_z:
-                self.skills_manager.drops_to_max_combo()
-            if event.key == K_x:
-                self.skills_manager.drops_to_can_all_clear()
-            if event.key == K_c:
-                self.skills_manager.drops_to_exist_5colors()
             hanabi_dict = {K_1: 1, K_2: 2, K_3: 3, K_4: 4, K_5: 5, K_6: 6}
             if event.key in hanabi_dict:
                 self.skills_manager.drops_to_hanabi(hanabi_dict[event.key])
+            elif event.key == K_z:
+                self.skills_manager.drops_to_max_combo()
+            elif event.key == K_x:
+                self.skills_manager.drops_to_can_all_clear()
+            elif event.key == K_c:
+                self.skills_manager.drops_to_exist_5colors()
 
     def _mouse_down_action(self, event):
-        if not self.is_moving:
-            x, y = self.draw_manager.to_index(event.pos)
-            if self.draw_manager.is_in_drops_area(x, y):
-                self.is_moving = True
-                self.moving_drop_pos = event.pos
-                self.moving_drop_index = (x, y)
-                self.moving_drop_type = self.drops[y][x]
-                self.drops[y][x] = 0
-                # option
-                self.erased_colors = []
-                self.moving_start_time = time.time()
+        if self.is_moving:
+            return
+        x, y = self.draw_manager.to_index(event.pos)
+        if self.draw_manager.is_in_drops_area(x, y):
+            self.is_moving = True
+            self.moving_drop_pos = event.pos
+            self.moving_drop_index = (x, y)
+            self.moving_drop_type = self.drops[y][x]
+            self.drops[y][x] = 0
+            # option
+            self.erased_colors = []
+            self.moving_start_time = time.time()
 
     def _mouse_move_action(self, event):
         if self.is_moving:

@@ -15,19 +15,19 @@ class DrawManager:
                 pos = self.to_pos(x, y)
                 self.draw_drop(drops[y][x], center=pos)
 
-    def draw_drop(self, n, left_up=None, center=None):
-        if n in self.IMAGES:
-            image = self.IMAGES[n]
+    def draw_drop(self, drop_num, left_up=None, center=None):
+        if drop_num in self.IMAGES:
+            image = self.IMAGES[drop_num]
             if center:
                 x = center[0] - image.get_width() // 2
                 y = center[1] - image.get_height() // 2
                 left_up = (x, y)
             self.SCREEN.blit(image, left_up)
 
-    def draw_text(self, screen, font, dictionary):
+    def draw_text(self, screen, font, info_dict):
         y = 20
-        for key in dictionary:
-            text = f"{key}: {dictionary[key]}"
+        for key in info_dict:
+            text = f"{key}: {info_dict[key]}"
             sprite = font.render(text, True, (255, 255, 255))
             screen.blit(sprite, (20, y))
             y += 50
