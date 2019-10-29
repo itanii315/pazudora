@@ -19,15 +19,16 @@ class DrawManager:
         if n in self.IMAGES:
             image = self.IMAGES[n]
             if center:
-                left_up = (center[0] - image.get_width() // 2,
-                           center[1] - image.get_height() // 2)
+                x = center[0] - image.get_width() // 2
+                y = center[1] - image.get_height() // 2
+                left_up = (x, y)
             self.SCREEN.blit(image, left_up)
 
     def draw_text(self, screen, font, dictionary):
         y = 20
         for key in dictionary:
-            sprite = font.render(
-                f"{key}: {dictionary[key]}", True, (255, 255, 255))
+            text = f"{key}: {dictionary[key]}"
+            sprite = font.render(text, True, (255, 255, 255))
             screen.blit(sprite, (20, y))
             y += 50
 
