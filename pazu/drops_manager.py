@@ -80,8 +80,8 @@ class DropsManager:
             for x in range(self.N_DROP_X):
                 if self.drops[y][x] == 0:
                     above_y = self._get_above_drop_y(x, y)
-                    self.drops[y][x] = self.drops[x][above_y]
-                    self.drops[x][above_y] = 0
+                    self.drops[y][x] = self.drops[above_y][x]
+                    self.drops[above_y][x] = 0
 
     def _get_above_drop_y(self, x, y):
         for i in range(y)[::-1]:

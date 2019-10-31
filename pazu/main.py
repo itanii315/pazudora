@@ -88,12 +88,12 @@ class Pazudora:
             self.draw_manager.draw_drop(
                 self.moving_drop_type, center=self.moving_drop_pos)
 
-        dictionary = {
+        info_dict = {
             "コンボ": self.drops_manager.erase_combo,
             "移動時間": "%.2f" % self.moving_time,
             "": self.drops_manager.erased_colors
         }
-        self.draw_manager.draw_text(screen, FONT, dictionary)
+        self.draw_manager.draw_text(screen, FONT, info_dict)
 
         pygame.display.update()
 
