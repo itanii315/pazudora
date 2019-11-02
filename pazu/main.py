@@ -46,7 +46,7 @@ class Pazudora:
         self.is_moving = False
         self.moving_drop_index = (0, 0)
         self.moving_drop_pos = (0, 0)
-        self.moving_drop_type = 0
+        self.moving_drop_num = 0
 
         self.moving_start_time = 0
         self.moving_time = 0
@@ -86,7 +86,7 @@ class Pazudora:
         self.draw_manager.draw_drops(self.drops)
         if self.is_moving:
             self.draw_manager.draw_drop(
-                self.moving_drop_type, center=self.moving_drop_pos)
+                self.moving_drop_num, center=self.moving_drop_pos)
 
         info_dict = {
             "コンボ": self.drops_manager.erase_combo,
@@ -118,14 +118,12 @@ class Pazudora:
                 self.skills_manager.drops_to_exist_5colors()
 
     def _mouse_down_action(self, event):
-        if self.is_moving:
-            return
         x, y = self.draw_manager.to_index(event.pos)
         if self.draw_manager.is_in_drops_area(x, y):
             self.is_moving = True
             self.moving_drop_pos = event.pos
             self.moving_drop_index = (x, y)
-            self.moving_drop_type = self.drops[y][x]
+            self.moving_drop_num = self.drops[y][x]
             self.drops[y][x] = 0
             # option
             self.erased_colors = []
@@ -147,7 +145,7 @@ class Pazudora:
         if self.is_moving:
             self.is_moving = False
             self.drops[self.moving_drop_index[1]
-                       ][self.moving_drop_index[0]] = self.moving_drop_type
+                       ][self.moving_drop_index[0]] = self.moving_drop_num
             self.drops_manager.start_erase()
 
 

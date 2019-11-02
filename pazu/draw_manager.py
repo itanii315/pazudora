@@ -10,8 +10,8 @@ class DrawManager:
         return 0 <= x < self.N_DROP_X and 0 <= y < self.N_DROP_Y
 
     def draw_drops(self, drops):
-        for y in range(len(drops)):
-            for x in range(len(drops[0])):
+        for y in range(self.N_DROP_Y):
+            for x in range(self.N_DROP_X):
                 pos = self.to_pos(x, y)
                 self.draw_drop(drops[y][x], center=pos)
 
