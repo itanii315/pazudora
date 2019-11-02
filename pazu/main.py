@@ -9,39 +9,23 @@ import glob
 import time
 
 from drops_manager import DropsManager
-from draw_manager import DrawManager
+from screen_manager import ScreenManager
 from skills_manager import SkillsManager
-
-SCREEN_SIZE = (400, 600)
-N_DROP_X = 6
-N_DROP_Y = 5
-FPS = 60
-COMBO_INTERVAL = int(FPS * 0.4)
-DROP_LENGTH = SCREEN_SIZE[0] // N_DROP_X
-OFFSET_Y = SCREEN_SIZE[1] - DROP_LENGTH * N_DROP_Y
-
-pygame.mixer.init(44100, -16, 2, 512)
-pygame.init()
-pygame.mixer.set_num_channels(64)
-
-screen = pygame.display.set_mode(SCREEN_SIZE)
-pygame.display.set_caption("パズドラゲーム")
-
-pygame.mixer.music.load("bgm_02.ogg")
-pygame.mixer.music.play(-1)
-SOUNDS = {filename: pygame.mixer.Sound(filename)
-          for filename in glob.glob("se_*.ogg")}
-IMAGES = {int(os.path.basename(filename)[0]): pygame.transform.smoothscale(
-    pygame.image.load(filename).convert_alpha(), (DROP_LENGTH, DROP_LENGTH))
-    for filename in glob.glob("images/*.png")}
-FONT = pygame.font.Font("ipaexg.ttf", 40)
+from sound_manager import SoundManager
 
 
 class Pazudora:
+    FPS = 60
+    COMBO_INTERVAL = int(FPS * 0.4)
+    SCREEN_SIZE = (400, 600)
+    N_DROP_X = 6
+    N_DROP_Y = 5
+
     def __init__(self):
+        pygame.init()
         sys.setrecursionlimit(5000)
 
-        self.drops = DropsManager.new_drops(N_DROP_X, N_DROP_Y)
+        self.drops = DropsManager.new_drops(self.N_DROP_X, self.N_DROP_Y)
 
         self.is_moving = False
         self.moving_drop_index = (0, 0)
@@ -51,29 +35,24 @@ class Pazudora:
         self.moving_start_time = 0
         self.moving_time = 0
 
-        self.draw_manager = DrawManager(self.drops, screen, IMAGES)
-        self.drops_manager = DropsManager(self.drops, SOUNDS, COMBO_INTERVAL)
+        SoundManager.init()
+        self.draw_manager = ScreenManager(self.drops, self.SCREEN_SIZE)
+        self.drops_manager = DropsManager(self.drops, self.COMBO_INTERVAL)
         self.skills_manager = SkillsManager(self.drops)
 
     def main(self):
+        SoundManager().play_bgm()
         clock = pygame.time.Clock()
         while True:
-            clock.tick(FPS)
+            clock.tick(self.FPS)
 
             for event in pygame.event.get():
                 if event.type == QUIT:
                     sys.exit()
                 self._event_handler(event)
 
-            if self.drops_manager.is_erase_timing():
-                if self.drops_manager.can_erase():
-                    self.drops_manager.erase()
-                else:
-                    if self.drops_manager.can_fall():
-                        self.drops_manager.fall()
-                        self.drops_manager.reset_will_erased_drops()
-                    else:
-                        self.drops_manager.finish_erase()
+            if self.drops_manager.is_action_timing():
+                self.drops_manager.action()
 
             if self.is_moving:
                 self.moving_time = time.time() - self.moving_start_time
@@ -81,8 +60,7 @@ class Pazudora:
             self._draw()
 
     def _draw(self):
-        screen.fill((0, 0, 0))
-
+        self.draw_manager.clear_screen()
         self.draw_manager.draw_drops(self.drops)
         if self.is_moving:
             self.draw_manager.draw_drop(
@@ -93,9 +71,8 @@ class Pazudora:
             "移動時間": "%.2f" % self.moving_time,
             "": self.drops_manager.erased_colors
         }
-        self.draw_manager.draw_text(screen, FONT, info_dict)
-
-        pygame.display.update()
+        self.draw_manager.draw_text(info_dict)
+        self.draw_manager.update_display()
 
     def _event_handler(self, event):
         if event.type == MOUSEBUTTONDOWN and event.button == 1:
@@ -131,11 +108,12 @@ class Pazudora:
 
     def _mouse_move_action(self, event):
         if self.is_moving:
+            OFFSET_Y = self.draw_manager.OFFSET_Y
             self.moving_drop_pos = event.pos[0], max(event.pos[1], OFFSET_Y)
             new_index = self.draw_manager.to_index(self.moving_drop_pos)
             if self.draw_manager.is_in_drops_area(*new_index):
                 if new_index != self.moving_drop_index:
-                    SOUNDS["se_004.ogg"].play()
+                    SoundManager().play_se_moving()
                     x, y = self.moving_drop_index
                     self.drops[y][x] = self.drops[new_index[1]][new_index[0]]
                     self.drops[new_index[1]][new_index[0]] = 0
@@ -144,8 +122,8 @@ class Pazudora:
     def _mouse_up_action(self, event):
         if self.is_moving:
             self.is_moving = False
-            self.drops[self.moving_drop_index[1]
-                       ][self.moving_drop_index[0]] = self.moving_drop_num
+            set_x, set_y = self.moving_drop_index
+            self.drops[set_x][set_y] = self.moving_drop_num
             self.drops_manager.start_erase()
 
 

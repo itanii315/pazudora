@@ -1,4 +1,5 @@
 import random
+from sound_manager import SoundManager
 
 
 class DropsManager:
@@ -6,10 +7,9 @@ class DropsManager:
     def new_drops(cls, x, y):
         return [[random.randint(1, 6) for i in range(x)] for j in range(y)]
 
-    def __init__(self, drops, sounds, combo_interbal):
+    def __init__(self, drops, combo_interbal):
         self.drops = drops
         self.COMBO_INTERVAL = combo_interbal
-        self.SOUNDS = sounds
         self.N_DROP_X = len(drops[0])
         self.N_DROP_Y = len(drops)
 
@@ -19,11 +19,20 @@ class DropsManager:
         self.erase_combo = 0
         self.erased_colors = []
 
-    def is_erase_timing(self):
+    def is_action_timing(self):
         if self.is_erasing:
             self.interval_count -= 1
             return (self.interval_count <= 0)
         return False
+
+    def action(self):
+        if self.can_erase():
+            self.erase()
+        elif self.can_fall():
+            self.fall()
+            self.reset_will_erased_drops()
+        else:
+            self.finish_erase()
 
     def can_erase(self):
         return bool(self.will_erased_drops)
@@ -37,7 +46,7 @@ class DropsManager:
     def erase(self):
         self.erase_combo += 1
         sound_num = min(self.erase_combo, 12)
-        self.SOUNDS["se_006p%03d.ogg" % sound_num].play()
+        SoundManager().play_se_combo(sound_num)
         chain = self.will_erased_drops.pop(0)
         for x, y, drop_num in chain:
             self.drops[y][x] = 0
