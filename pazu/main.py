@@ -36,7 +36,7 @@ class Pazudora:
         self.moving_time = 0
 
         SoundManager.init()
-        self.draw_manager = ScreenManager(self.drops, self.SCREEN_SIZE)
+        self.screen_manager = ScreenManager(self.drops, self.SCREEN_SIZE)
         self.drops_manager = DropsManager(self.drops, self.COMBO_INTERVAL)
         self.skills_manager = SkillsManager(self.drops)
 
@@ -60,10 +60,10 @@ class Pazudora:
             self._draw()
 
     def _draw(self):
-        self.draw_manager.clear_screen()
-        self.draw_manager.draw_drops(self.drops)
+        self.screen_manager.clear_screen()
+        self.screen_manager.draw_drops(self.drops)
         if self.is_moving:
-            self.draw_manager.draw_drop(
+            self.screen_manager.draw_drop(
                 self.moving_drop_num, center=self.moving_drop_pos)
 
         info_dict = {
@@ -71,8 +71,8 @@ class Pazudora:
             "移動時間": "%.2f" % self.moving_time,
             "": self.drops_manager.erased_colors
         }
-        self.draw_manager.draw_text(info_dict)
-        self.draw_manager.update_display()
+        self.screen_manager.draw_text(info_dict)
+        self.screen_manager.update_display()
 
     def _event_handler(self, event):
         if event.type == MOUSEBUTTONDOWN and event.button == 1:
@@ -95,8 +95,8 @@ class Pazudora:
                 self.skills_manager.drops_to_exist_5colors()
 
     def _mouse_down_action(self, event):
-        x, y = self.draw_manager.to_index(event.pos)
-        if self.draw_manager.is_in_drops_area(x, y):
+        x, y = self.screen_manager.to_index(event.pos)
+        if self.screen_manager.is_in_drops_area(x, y):
             self.is_moving = True
             self.moving_drop_pos = event.pos
             self.moving_drop_index = (x, y)
@@ -108,10 +108,10 @@ class Pazudora:
 
     def _mouse_move_action(self, event):
         if self.is_moving:
-            OFFSET_Y = self.draw_manager.OFFSET_Y
+            OFFSET_Y = self.screen_manager.OFFSET_Y
             self.moving_drop_pos = event.pos[0], max(event.pos[1], OFFSET_Y)
-            new_index = self.draw_manager.to_index(self.moving_drop_pos)
-            if self.draw_manager.is_in_drops_area(*new_index):
+            new_index = self.screen_manager.to_index(self.moving_drop_pos)
+            if self.screen_manager.is_in_drops_area(*new_index):
                 if new_index != self.moving_drop_index:
                     SoundManager().play_se_moving()
                     x, y = self.moving_drop_index
