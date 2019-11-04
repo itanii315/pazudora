@@ -99,6 +99,8 @@ class Pazudora:
                 self.skills_manager.drops_to_exist_5colors()
 
     def _mouse_down_action(self, event):
+        if self.drops_manager.is_erasing:
+            return
         indices = self.screen_manager.to_index(event.pos)
         if self.screen_manager.is_in_drops_area(indices):
             self.is_moving = True
