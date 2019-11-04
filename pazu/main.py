@@ -17,7 +17,7 @@ from sound_manager import SoundManager
 class Pazudora:
     FPS = 60
     COMBO_INTERVAL = int(FPS * 0.4)
-    SCREEN_SIZE = (600, 900)
+    SCREEN_SIZE = (400, 600)
     N_DROP_X = 6
     N_DROP_Y = 5
     MAX_MOVING_TIME = 4.00
