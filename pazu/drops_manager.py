@@ -45,12 +45,9 @@ class DropsManager:
         return False
 
     def action(self):
-        print("hoge")
         if self.can_erase():
-            print("erase")
             self.erase()
         elif self.can_fall():
-            print("fall")
             self.fall()
             self.reset_will_erased_drops()
         else:
