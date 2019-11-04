@@ -5,6 +5,7 @@ import os
 
 class ScreenManager:
     def __init__(self, drops, screen_size):
+        self.drops = drops
         self.SCREEN_SIZE = screen_size
         self.N_DROP_X = len(drops[0])
         self.N_DROP_Y = len(drops)
@@ -21,8 +22,12 @@ class ScreenManager:
                 (self.DROP_LENGTH, self.DROP_LENGTH),
             ) for filename in glob.glob("images/*.png")}
 
-    def is_in_drops_area(self, x, y):
-        return 0 <= x < self.N_DROP_X and 0 <= y < self.N_DROP_Y
+    def into_screen(self, pos):
+        return pos[0], max(pos[1], self.OFFSET_Y)
+
+    def is_in_drops_area(self, indices):
+        return (0 <= indices[0] < self.N_DROP_X and
+                0 <= indices[1] < self.N_DROP_Y)
 
     def clear_screen(self):
         self.SCREEN.fill((0, 0, 0))
@@ -30,11 +35,10 @@ class ScreenManager:
     def update_display(self):
         pygame.display.update()
 
-    def draw_drops(self, drops):
+    def draw_drops(self):
         for y in range(self.N_DROP_Y):
             for x in range(self.N_DROP_X):
-                pos = self.to_pos(x, y)
-                self.draw_drop(drops[y][x], center=pos)
+                self.draw_drop(self.drops[y][x], center=self.to_pos(x, y))
 
     def draw_drop(self, drop_num, left_up=None, center=None):
         if drop_num in self.IMAGES:

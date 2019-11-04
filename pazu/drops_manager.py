@@ -3,9 +3,16 @@ from sound_manager import SoundManager
 
 
 class DropsManager:
+    EMPTY = 0
+    N_COLOR = 6
+
     @classmethod
     def new_drops(cls, x, y):
-        return [[random.randint(1, 6) for i in range(x)] for j in range(y)]
+        return [[cls.get_random_drop() for i in range(x)] for j in range(y)]
+
+    @classmethod
+    def get_random_drop(self):
+        return random.randint(1, self.N_COLOR)
 
     def __init__(self, drops, combo_interbal):
         self.drops = drops
@@ -19,6 +26,18 @@ class DropsManager:
         self.erase_combo = 0
         self.erased_colors = []
 
+    def set_drop(self, indices, num):
+        self.drops[indices[1]][indices[0]] = num
+
+    def get_drop(self, indices):
+        return self.drops[indices[1]][indices[0]]
+
+    def is_empty(self, indices):
+        return self.get_drop(indices) == self.EMPTY
+
+    def remove_drop(self, pos):
+        self.set_drop(pos, self.EMPTY)
+
     def is_action_timing(self):
         if self.is_erasing:
             self.interval_count -= 1
@@ -26,9 +45,12 @@ class DropsManager:
         return False
 
     def action(self):
+        print("hoge")
         if self.can_erase():
+            print("erase")
             self.erase()
         elif self.can_fall():
+            print("fall")
             self.fall()
             self.reset_will_erased_drops()
         else:
@@ -38,18 +60,20 @@ class DropsManager:
         return bool(self.will_erased_drops)
 
     def can_fall(self):
+        return self.exists_in_drops(self.EMPTY)
+
+    def exists_in_drops(self, drop_num):
         for row in self.drops:
-            if 0 in row:
+            if drop_num in row:
                 return True
         return False
 
     def erase(self):
         self.erase_combo += 1
-        sound_num = min(self.erase_combo, 12)
-        SoundManager().play_se_combo(sound_num)
+        SoundManager().play_se_combo(min(self.erase_combo, 12))
         chain = self.will_erased_drops.pop(0)
         for x, y, drop_num in chain:
-            self.drops[y][x] = 0
+            self.remove_drop((x, y))
             if drop_num not in self.erased_colors:
                 self.erased_colors.append(drop_num)
                 self.erased_colors.sort()
@@ -78,23 +102,27 @@ class DropsManager:
         self.interval_count = 0
         self.is_erasing = False
 
+    def swap(self, pos1, pos2):
+        tmp = self.drops[pos1[1]][pos1[0]]
+        self.drops[pos1[1]][pos1[0]] = self.drops[pos2[1]][pos2[0]]
+        self.drops[pos2[1]][pos2[0]] = tmp
+
     def _fall_new_drops(self):
         for y in range(self.N_DROP_Y):
             for x in range(self.N_DROP_X):
-                if self.drops[y][x] == 0:
-                    self.drops[y][x] = random.randint(1, 6)
+                if self.is_empty((x, y)):
+                    self.set_drop((x, y), self.get_random_drop())
 
     def _fall_exist_drops(self):
         for y in range(self.N_DROP_Y)[::-1]:
             for x in range(self.N_DROP_X):
-                if self.drops[y][x] == 0:
+                if self.is_empty((x, y)):
                     above_y = self._get_above_drop_y(x, y)
-                    self.drops[y][x] = self.drops[above_y][x]
-                    self.drops[above_y][x] = 0
+                    self.swap((x, y), (x, above_y))
 
     def _get_above_drop_y(self, x, y):
         for i in range(y)[::-1]:
-            if self.drops[i][x]:
+            if not self.is_empty((x, i)):
                 return i
         return y
 
@@ -104,7 +132,7 @@ class DropsManager:
         return chain_drops_list
 
     def _get_lined_drops(self):
-        lined_drops = [[0 for i in range(self.N_DROP_X)]
+        lined_drops = [[self.EMPTY for i in range(self.N_DROP_X)]
                        for j in range(self.N_DROP_Y)]
         for y in range(self.N_DROP_Y):
             for x in range(self.N_DROP_X - 2):
@@ -126,8 +154,8 @@ class DropsManager:
 
     def _get_chain_drops_list(self, line_drops):
         self.line_drops = line_drops
-        self.checked_drops = [
-            [0 for i in range(self.N_DROP_X)] for j in range(self.N_DROP_Y)]
+        self.checked_drops = [[self.EMPTY for i in range(self.N_DROP_X)]
+                              for j in range(self.N_DROP_Y)]
         chain_drops_list = []
         for y in range(self.N_DROP_Y):
             for x in range(self.N_DROP_X):

@@ -17,9 +17,10 @@ from sound_manager import SoundManager
 class Pazudora:
     FPS = 60
     COMBO_INTERVAL = int(FPS * 0.4)
-    SCREEN_SIZE = (400, 600)
+    SCREEN_SIZE = (600, 900)
     N_DROP_X = 6
     N_DROP_Y = 5
+    MAX_MOVING_TIME = 4.00
 
     def __init__(self):
         pygame.init()
@@ -53,15 +54,18 @@ class Pazudora:
 
             if self.drops_manager.is_action_timing():
                 self.drops_manager.action()
-
-            if self.is_moving:
-                self.moving_time = time.time() - self.moving_start_time
-
+            self._update_moving_time()
             self._draw()
+
+    def _update_moving_time(self):
+        if self.is_moving:
+            self.moving_time = time.time() - self.moving_start_time
+            if self.moving_time > self.MAX_MOVING_TIME:
+                self._mouse_up_action(None)
 
     def _draw(self):
         self.screen_manager.clear_screen()
-        self.screen_manager.draw_drops(self.drops)
+        self.screen_manager.draw_drops()
         if self.is_moving:
             self.screen_manager.draw_drop(
                 self.moving_drop_num, center=self.moving_drop_pos)
@@ -95,35 +99,32 @@ class Pazudora:
                 self.skills_manager.drops_to_exist_5colors()
 
     def _mouse_down_action(self, event):
-        x, y = self.screen_manager.to_index(event.pos)
-        if self.screen_manager.is_in_drops_area(x, y):
+        indices = self.screen_manager.to_index(event.pos)
+        if self.screen_manager.is_in_drops_area(indices):
             self.is_moving = True
             self.moving_drop_pos = event.pos
-            self.moving_drop_index = (x, y)
-            self.moving_drop_num = self.drops[y][x]
-            self.drops[y][x] = 0
+            self.moving_drop_index = indices
+            self.moving_drop_num = self.drops_manager.get_drop(indices)
+            self.drops_manager.remove_drop(indices)
             # option
             self.erased_colors = []
             self.moving_start_time = time.time()
 
     def _mouse_move_action(self, event):
         if self.is_moving:
-            OFFSET_Y = self.screen_manager.OFFSET_Y
-            self.moving_drop_pos = event.pos[0], max(event.pos[1], OFFSET_Y)
+            self.moving_drop_pos = self.screen_manager.into_screen(event.pos)
             new_index = self.screen_manager.to_index(self.moving_drop_pos)
-            if self.screen_manager.is_in_drops_area(*new_index):
+            if self.screen_manager.is_in_drops_area(new_index):
                 if new_index != self.moving_drop_index:
                     SoundManager().play_se_moving()
-                    x, y = self.moving_drop_index
-                    self.drops[y][x] = self.drops[new_index[1]][new_index[0]]
-                    self.drops[new_index[1]][new_index[0]] = 0
+                    self.drops_manager.swap(self.moving_drop_index, new_index)
                     self.moving_drop_index = new_index
 
     def _mouse_up_action(self, event):
         if self.is_moving:
             self.is_moving = False
-            set_x, set_y = self.moving_drop_index
-            self.drops[set_x][set_y] = self.moving_drop_num
+            self.drops_manager.set_drop(
+                self.moving_drop_index, self.moving_drop_num)
             self.drops_manager.start_erase()
 
 
