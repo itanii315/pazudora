@@ -124,28 +124,52 @@ class DropsManager:
         return y
 
     def _get_will_erased_drops(self):
-        line_drops = self._get_lined_drops()
+        line_drops = self._get_lined_drops(3)
         chain_drops_list = self._get_chain_drops_list(line_drops)
         return chain_drops_list
 
-    def _get_lined_drops(self):
+    def _get_lined_drops(self, n):
         lined_drops = [[self.EMPTY for i in range(self.N_DROP_X)]
                        for j in range(self.N_DROP_Y)]
         for y in range(self.N_DROP_Y):
-            for x in range(self.N_DROP_X - 2):
-                if self.drops[y][x] == self.drops[y][x+1] == self.drops[y][x+2]:
-                    drop_type = self.drops[y][x]
-                    lined_drops[y][x] = drop_type
-                    lined_drops[y][x+1] = drop_type
-                    lined_drops[y][x+2] = drop_type
+            for x in range(self.N_DROP_X - n + 1):
+                drop_type = self.drops[y][x]
+                for i in range(n):
+                    if self.drops[y][x+i] != drop_type:
+                        break
+                else:
+                    for i in range(n):
+                        lined_drops[y][x+i] = drop_type
 
         for x in range(self.N_DROP_X):
-            for y in range(self.N_DROP_Y - 2):
-                if self.drops[y][x] == self.drops[y+1][x] == self.drops[y+2][x]:
-                    drop_type = self.drops[y][x]
-                    lined_drops[y][x] = drop_type
-                    lined_drops[y+1][x] = drop_type
-                    lined_drops[y+2][x] = drop_type
+            for y in range(self.N_DROP_Y - n + 1):
+                drop_type = self.drops[y][x]
+                for i in range(n):
+                    if self.drops[y+i][x] != drop_type:
+                        break
+                else:
+                    for i in range(n):
+                        lined_drops[y+i][x] = drop_type
+
+        for x in range(self.N_DROP_X - n + 1):
+            for y in range(self.N_DROP_Y - n + 1):
+                drop_type = self.drops[y][x]
+                for i in range(n):
+                    if self.drops[y+i][x+i] != drop_type:
+                        break
+                else:
+                    for i in range(n):
+                        lined_drops[y+i][x+i] = drop_type
+
+        for x in range(self.N_DROP_X - n + 1):
+            for y in range(self.N_DROP_Y - n + 1):
+                drop_type = self.drops[y+n-1][x]
+                for i in range(n):
+                    if self.drops[y+n-1-i][x+i] != drop_type:
+                        break
+                else:
+                    for i in range(n):
+                        lined_drops[y+n-1-i][x+i] = drop_type
 
         return lined_drops
 
@@ -176,3 +200,7 @@ class DropsManager:
             self._find_chain(x + 1, y, n)
             self._find_chain(x, y - 1, n)
             self._find_chain(x, y + 1, n)
+            self._find_chain(x - 1, y - 1, n)
+            self._find_chain(x + 1, y - 1, n)
+            self._find_chain(x - 1, y + 1, n)
+            self._find_chain(x + 1, y + 1, n)

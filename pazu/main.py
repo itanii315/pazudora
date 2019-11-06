@@ -109,7 +109,7 @@ class Pazudora:
             self.moving_drop_num = self.drops_manager.get_drop(indices)
             self.drops_manager.remove_drop(indices)
             # option
-            self.erased_colors = []
+            self.drops_manager.erased_colors = []
             self.moving_start_time = time.time()
 
     def _mouse_move_action(self, event):
