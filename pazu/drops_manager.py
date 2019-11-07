@@ -3,8 +3,13 @@ from sound_manager import SoundManager
 
 
 class DropsManager:
-    EMPTY = 0
+    # config
+    CHAIN = 3
+    IS_DIAGONAL = True
+
+    # constant
     N_COLOR = 6
+    EMPTY = 0
 
     @classmethod
     def new_drops(cls, x, y):
@@ -35,8 +40,12 @@ class DropsManager:
     def is_empty(self, indices):
         return self.get_drop(indices) == self.EMPTY
 
-    def remove_drop(self, pos):
-        self.set_drop(pos, self.EMPTY)
+    def remove_drop(self, indices):
+        self.set_drop(indices, self.EMPTY)
+
+    def is_in_drops_area(self, indices):
+        return (0 <= indices[0] < self.N_DROP_X and
+                0 <= indices[1] < self.N_DROP_Y)
 
     def is_action_timing(self):
         if self.is_erasing:
@@ -124,54 +133,32 @@ class DropsManager:
         return y
 
     def _get_will_erased_drops(self):
-        line_drops = self._get_lined_drops(3)
-        chain_drops_list = self._get_chain_drops_list(line_drops)
-        return chain_drops_list
-
-    def _get_lined_drops(self, n):
         lined_drops = [[self.EMPTY for i in range(self.N_DROP_X)]
                        for j in range(self.N_DROP_Y)]
+        self._update_lined_drops(lined_drops, self.CHAIN, 1, 0)
+        self._update_lined_drops(lined_drops, self.CHAIN, 0, 1)
+        if self.IS_DIAGONAL:
+            self._update_lined_drops(lined_drops, self.CHAIN, 1, 1)
+            self._update_lined_drops(lined_drops, self.CHAIN, 1, -1)
+        chain_drops_list = self._get_chain_drops_list(lined_drops)
+        return chain_drops_list
+
+    def _update_lined_drops(self, lined_drops, n, nx, ny):
         for y in range(self.N_DROP_Y):
-            for x in range(self.N_DROP_X - n + 1):
-                drop_type = self.drops[y][x]
-                for i in range(n):
-                    if self.drops[y][x+i] != drop_type:
-                        break
-                else:
-                    for i in range(n):
-                        lined_drops[y][x+i] = drop_type
-
-        for x in range(self.N_DROP_X):
-            for y in range(self.N_DROP_Y - n + 1):
-                drop_type = self.drops[y][x]
-                for i in range(n):
-                    if self.drops[y+i][x] != drop_type:
-                        break
-                else:
-                    for i in range(n):
-                        lined_drops[y+i][x] = drop_type
-
-        for x in range(self.N_DROP_X - n + 1):
-            for y in range(self.N_DROP_Y - n + 1):
-                drop_type = self.drops[y][x]
-                for i in range(n):
-                    if self.drops[y+i][x+i] != drop_type:
-                        break
-                else:
-                    for i in range(n):
-                        lined_drops[y+i][x+i] = drop_type
-
-        for x in range(self.N_DROP_X - n + 1):
-            for y in range(self.N_DROP_Y - n + 1):
-                drop_type = self.drops[y+n-1][x]
-                for i in range(n):
-                    if self.drops[y+n-1-i][x+i] != drop_type:
-                        break
-                else:
-                    for i in range(n):
-                        lined_drops[y+n-1-i][x+i] = drop_type
+            for x in range(self.N_DROP_X):
+                drop_num = self.drops[y][x]
+                self.check_is_lined(lined_drops, drop_num, n, x, y, nx, ny)
 
         return lined_drops
+
+    def check_is_lined(self, lined_drops, drop_num, n, x, y, nx, ny):
+        for i in range(n):
+            if not self.is_in_drops_area((x+i*nx, y+i*ny)):
+                return
+            if self.drops[y+i*ny][x+i*nx] != drop_num:
+                return
+        for i in range(n):
+            lined_drops[y+i*ny][x+i*nx] = drop_num
 
     def _get_chain_drops_list(self, line_drops):
         self.line_drops = line_drops
@@ -200,7 +187,8 @@ class DropsManager:
             self._find_chain(x + 1, y, n)
             self._find_chain(x, y - 1, n)
             self._find_chain(x, y + 1, n)
-            self._find_chain(x - 1, y - 1, n)
-            self._find_chain(x + 1, y - 1, n)
-            self._find_chain(x - 1, y + 1, n)
-            self._find_chain(x + 1, y + 1, n)
+            if self.IS_DIAGONAL:
+                self._find_chain(x - 1, y - 1, n)
+                self._find_chain(x + 1, y - 1, n)
+                self._find_chain(x - 1, y + 1, n)
+                self._find_chain(x + 1, y + 1, n)

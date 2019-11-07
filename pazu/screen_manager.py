@@ -25,10 +25,6 @@ class ScreenManager:
     def into_screen(self, pos):
         return pos[0], max(pos[1], self.OFFSET_Y)
 
-    def is_in_drops_area(self, indices):
-        return (0 <= indices[0] < self.N_DROP_X and
-                0 <= indices[1] < self.N_DROP_Y)
-
     def clear_screen(self):
         self.SCREEN.fill((0, 0, 0))
 

@@ -15,6 +15,7 @@ from sound_manager import SoundManager
 
 
 class Pazudora:
+    # config
     FPS = 60
     COMBO_INTERVAL = int(FPS * 0.4)
     SCREEN_SIZE = (400, 600)
@@ -102,7 +103,7 @@ class Pazudora:
         if self.drops_manager.is_erasing:
             return
         indices = self.screen_manager.to_index(event.pos)
-        if self.screen_manager.is_in_drops_area(indices):
+        if self.drops_manager.is_in_drops_area(indices):
             self.is_moving = True
             self.moving_drop_pos = event.pos
             self.moving_drop_index = indices
@@ -116,7 +117,7 @@ class Pazudora:
         if self.is_moving:
             self.moving_drop_pos = self.screen_manager.into_screen(event.pos)
             new_index = self.screen_manager.to_index(self.moving_drop_pos)
-            if self.screen_manager.is_in_drops_area(new_index):
+            if self.drops_manager.is_in_drops_area(new_index):
                 if new_index != self.moving_drop_index:
                     SoundManager().play_se_moving()
                     self.drops_manager.swap(self.moving_drop_index, new_index)
