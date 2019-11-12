@@ -4,18 +4,16 @@ import os
 
 
 class ScreenManager:
-    def __init__(self, drops, screen_size):
+    def __init__(self, drops, view):
         self.drops = drops
-        self.SCREEN_SIZE = screen_size
+        self.view = view
+        
         self.N_DROP_X = len(drops[0])
         self.N_DROP_Y = len(drops)
-        self.DROP_LENGTH = self.SCREEN_SIZE[0] // self.N_DROP_X
-        self.OFFSET_Y = self.SCREEN_SIZE[1] - self.DROP_LENGTH * self.N_DROP_Y
+        self.DROP_LENGTH = view.w // self.N_DROP_X
+        self.OFFSET_Y = view.h - self.DROP_LENGTH * self.N_DROP_Y
 
-        self.SCREEN = pygame.display.set_mode(self.SCREEN_SIZE)
-        pygame.display.set_caption("パズドラゲーム")
-
-        self.FONT = pygame.font.Font("ipaexg.ttf", 40)
+        self.FONT = pygame.font.Font("ipaexg.ttf", view.w // 10)
         self.IMAGES = {
             int(os.path.basename(filename)[0]): pygame.transform.smoothscale(
                 pygame.image.load(filename).convert_alpha(),
@@ -23,13 +21,7 @@ class ScreenManager:
             ) for filename in glob.glob("images/*.png")}
 
     def into_screen(self, pos):
-        return pos[0], max(pos[1], self.OFFSET_Y)
-
-    def clear_screen(self):
-        self.SCREEN.fill((0, 0, 0))
-
-    def update_display(self):
-        pygame.display.update()
+        return self.view.into_screen(pos)
 
     def draw_drops(self):
         for y in range(self.N_DROP_Y):
@@ -43,15 +35,15 @@ class ScreenManager:
                 x = center[0] - image.get_width() // 2
                 y = center[1] - image.get_height() // 2
                 left_up = (x, y)
-            self.SCREEN.blit(image, left_up)
+            self.view.blit(image, left_up)
 
     def draw_text(self, info_dict):
-        y = 20
+        y = self.view.h // 30
         for key in info_dict:
             text = f"{key}: {info_dict[key]}"
             sprite = self.FONT.render(text, True, (255, 255, 255))
-            self.SCREEN.blit(sprite, (20, y))
-            y += 50
+            self.view.blit(sprite, (20, y))
+            y += self.view.h // 10
 
     def to_pos(self, x, y):
         pos_x = self.DROP_LENGTH * x + self.DROP_LENGTH // 2
