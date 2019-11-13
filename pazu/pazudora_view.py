@@ -1,6 +1,7 @@
 from view import View
 from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN
-from pygame.locals import K_1, K_2, K_3, K_4, K_5, K_6, K_z, K_x, K_c
+from pygame.locals import K_1, K_2, K_3, K_4, K_5, K_6, K_z, K_x, K_c, K_p, K_ESCAPE
+from pygame import mouse
 
 from drops_manager import DropsManager
 from screen_manager import ScreenManager
@@ -14,7 +15,8 @@ import time
 class PazudoraView(View):
     def create(self, **kwargs):
         self.MAX_MOVING_TIME = 4.00
-        self.COMBO_INTERVAL = int(Screen.FPS * 0.4)
+        interval_sec = kwargs.get("combo_interval", 0.4)
+        self.COMBO_INTERVAL = int(Screen.FPS * interval_sec)
         self.N_DROP_X = kwargs.get("n_drop_x", 6)
         self.N_DROP_Y = kwargs.get("n_drop_y", 5)
 
@@ -34,6 +36,9 @@ class PazudoraView(View):
         self.skills_manager = SkillsManager(self.drops)
     
     def key(self, key):
+        if key == K_ESCAPE:
+            self.drops_manager.force_finish_erase()
+
         if self.is_moving or self.drops_manager.is_erasing:
             return
 
@@ -56,6 +61,8 @@ class PazudoraView(View):
             self._mouse_up_action(pos)
 
     def update(self):
+        if not any(mouse.get_pressed()) and self.is_moving:
+            self._stop_moving()
         if self.drops_manager.is_action_timing():
             self.drops_manager.action()
         self._update_moving_time()
@@ -102,10 +109,13 @@ class PazudoraView(View):
 
     def _mouse_up_action(self, pos):
         if self.is_moving:
-            self.is_moving = False
-            self.drops_manager.set_drop(
-                self.moving_drop_index, self.moving_drop_num)
-            self.drops_manager.start_erase()
+            self._stop_moving()
+
+    def _stop_moving(self):
+        self.is_moving = False
+        self.drops_manager.set_drop(
+            self.moving_drop_index, self.moving_drop_num)
+        self.drops_manager.start_erase()
     
     def _update_moving_time(self):
         if self.is_moving:

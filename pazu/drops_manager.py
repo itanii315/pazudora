@@ -108,6 +108,12 @@ class DropsManager:
         self.interval_count = 0
         self.is_erasing = False
 
+    def force_finish_erase(self):
+        self.will_erased_drops = []
+        self._fall_exist_drops()
+        self._fall_new_drops()
+        self.finish_erase()
+
     def swap(self, pos1, pos2):
         tmp = self.drops[pos1[1]][pos1[0]]
         self.drops[pos1[1]][pos1[0]] = self.drops[pos2[1]][pos2[0]]

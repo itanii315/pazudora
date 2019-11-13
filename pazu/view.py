@@ -1,5 +1,5 @@
 import pygame
-from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN, K_p
 
 class View:
     views = []
@@ -9,14 +9,21 @@ class View:
         self.w = w
         self.h = h
         View.views.append(self)
+        self.is_update = True
         self.create(**kwargs)
 
     def on_update(self, screen):
-        self.update()
+        if self.is_update:
+            self.update()
         self._screen = screen
         self.draw()
 
     def on_event(self, event):
+        if event.type == KEYDOWN and event.key == K_p:
+            self.is_update = not self.is_update
+        if not self.is_update:
+            return
+
         if event.type in (MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP):
             pos = self.get_pos_on_view(event.pos)
             if event.type == MOUSEBUTTONDOWN:
@@ -46,6 +53,12 @@ class View:
 
     def get_pos_on_screen(self, pos):
         return pos[0] + self.x, pos[1] + self.y
+
+    def view_pos_to_per(self, pos):
+        return pos[0] / self.w, pos[1] / self.h
+
+    def per_to_view_pos(self, per):
+        return int(per[0] * self.w), int(per[1] * self.h)
 
     def into_view(self, pos):
         x, y = pos
