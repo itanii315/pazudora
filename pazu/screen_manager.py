@@ -20,8 +20,23 @@ class ScreenManager:
                 (self.DROP_LENGTH, self.DROP_LENGTH),
             ) for filename in glob.glob("images/*.png")}
 
-    def into_screen(self, pos):
-        return self.view.into_screen(pos)
+    def is_in_drops_area(self, pos):
+        return self.OFFSET_Y <= pos[1]
+
+    def into_drops_area(self, pos):
+        return pos[0], max(pos[1], self.OFFSET_Y)
+
+    def into_drops_index(self, pos):
+        x, y = pos
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        if x >= self.N_DROP_X:
+            x = self.N_DROP_X - 1
+        if y >= self.N_DROP_Y:
+            y = self.N_DROP_Y - 1
+        return x, y
 
     def draw_drops(self):
         for y in range(self.N_DROP_Y):
@@ -53,4 +68,6 @@ class ScreenManager:
     def to_index(self, pos):
         x_index = pos[0] // self.DROP_LENGTH
         y_index = (pos[1] - self.OFFSET_Y) // self.DROP_LENGTH
+        if self.is_in_drops_area(pos):
+            return self.into_drops_index((x_index, y_index))
         return x_index, y_index

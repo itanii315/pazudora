@@ -18,10 +18,16 @@ class View:
 
     def on_event(self, event):
         if event.type in (MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP):
-            pos = self._get_pos_on_view(event.pos)
-            if self._is_in_view(pos):
-                button = None if event.type == MOUSEMOTION else event.button
-                self.mouse(event.type, button, pos)
+            pos = self.get_pos_on_view(event.pos)
+            if event.type == MOUSEBUTTONDOWN:
+                if not self.is_in_view(pos):
+                    return
+            else:
+                pos = self.into_view(pos)
+            
+            button = None if event.type == MOUSEMOTION else event.button
+            self.mouse(event.type, button, pos)
+            
         elif event.type == KEYDOWN:
             self.key(event.key)
 
@@ -29,19 +35,19 @@ class View:
         self.destroy()
 
     def blit(self, sprite, pos):
-        pos = self._get_pos_on_screen(pos)
+        pos = self.get_pos_on_screen(pos)
         self._screen.blit(sprite, pos)
 
-    def _is_in_view(self, pos):
+    def is_in_view(self, pos):
         return 0 <= pos[0] < self.w and 0 <= pos[1] < self.h
 
-    def _get_pos_on_view(self, pos):
+    def get_pos_on_view(self, pos):
         return pos[0] - self.x, pos[1] - self.y
 
-    def _get_pos_on_screen(self, pos):
+    def get_pos_on_screen(self, pos):
         return pos[0] + self.x, pos[1] + self.y
 
-    def into_screen(self, pos):
+    def into_view(self, pos):
         x, y = pos
         if x < 0:
             x = 0

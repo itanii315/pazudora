@@ -92,7 +92,7 @@ class PazudoraView(View):
 
     def _mouse_move_action(self, pos):
         if self.is_moving:
-            self.moving_drop_pos = self.screen_manager.into_screen(pos)
+            self.moving_drop_pos = self.screen_manager.into_drops_area(pos)
             new_index = self.screen_manager.to_index(self.moving_drop_pos)
             if self.drops_manager.is_in_drops_area(new_index):
                 if new_index != self.moving_drop_index:

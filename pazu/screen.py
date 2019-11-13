@@ -1,5 +1,5 @@
 import pygame
-from pygame.locals import QUIT
+from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, QUIT
 import sys
 from view import View
 
@@ -23,8 +23,14 @@ class Screen:
                     for view in View.views:
                         view.on_destroy()
                     sys.exit()
-                for view in View.views:
-                    view.on_event(event)
+                self.event(event, View.views)
             for view in View.views:
                 view.on_update(self.SCREEN)
             pygame.display.update()
+
+    def event(self, event, views):
+        for view in views:
+            view.on_event(event)
+
+    def is_mouse_action(self, event):
+        return event.type in [MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP]
