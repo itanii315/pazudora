@@ -6,6 +6,7 @@ from drops_manager import DropsManager
 from pygame.locals import MOUSEBUTTONDOWN, MOUSEMOTION, MOUSEBUTTONUP, KEYDOWN, K_SPACE
 from pygame.key import get_pressed
 
+
 class PazudoraController(Screen):
     def __init__(self):
         self.SCREEN_SIZE = (1000, 800)
@@ -19,7 +20,7 @@ class PazudoraController(Screen):
         self._arrangement()
         super().main()
 
-    def _arrangement(self):        
+    def _arrangement(self):
         DropsManager.CHAIN = 3
         DropsManager.IS_DIAGONAL = True
         if self.arrange_mode == 1:
@@ -28,7 +29,7 @@ class PazudoraController(Screen):
                     PazudoraView(i*750, j*400, 250, 400)
             PazudoraView(300, 100, 400, 600)
         elif self.arrange_mode == 2:
-            PazudoraView(0, 0, 1000, 800, 
+            PazudoraView(0, 0, 1000, 800,
                          n_drop_x=24, n_drop_y=10, combo_interval=0.1)
 
     def event(self, event, views):
